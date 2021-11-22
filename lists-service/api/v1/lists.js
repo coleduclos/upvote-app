@@ -32,21 +32,34 @@ module.exports.create = (event, context, callback) => {
     callback(new Error('Couldn\'t submit list because of validation errors.'));
     return;
   }
+
   console.log('Creating list...');
   const list = new List(title, details, author)
+
   const onPut = (err, data) => {
+    console.log("HELLO")
     if(err) {
-      console.log(err);
-      callback(new Error('Could not create list.'));
+      console.error(err);
+      const response = new Response(500, JSON.stringify(
+        {
+          message: "Internal server error."
+        }
+      ));
+      callback(null, response);
+      return;
+
     } else {
       const response = new Response(200, data.Item);
-      return callback(null, response);
+      callback(null, response);
+      return;
     }
   }
+
   const listInfo = {
     TableName: process.env.LISTS_TABLE,
     Item: list,
   };
+
   dynamoDb.put(listInfo, onPut)
 };
 
@@ -72,9 +85,10 @@ module.exports.get = (event, context, callback) => {
         response.statusCode = 404
         response.body = JSON.stringify({'error' : 'Not found'})
       }
-      return callback(null, response);
+      callback(null, response);
     }
   };
+
   dynamoDb.get(params, onGet)
 };
 
@@ -88,11 +102,11 @@ module.exports.getAll = (event, context, callback) => {
   console.log("Scanning lists table.");
   const onScan = (err, data) => {
       if (err) {
-          console.log('Scan failed to load data. Error JSON:', JSON.stringify(err, null, 2));
+          console.error('Scan failed to load data. Error JSON:', JSON.stringify(err, null, 2));
           callback(err);
       } else {
           console.log("Scan succeeded.");
-          return callback(null, {
+          callback(null, {
               statusCode: 200,
               body: JSON.stringify({
                   data: data.Items
@@ -116,8 +130,13 @@ module.exports.delete = (event, context, callback) => {
   console.log("Deleting list: " + event.pathParameters.id);
   const onDelete = (err, data) => {
       if (err) {
-          console.log('Delete failed. Error JSON:', JSON.stringify(err, null, 2));
-          callback(err);
+          console.error(err);
+          const response = new Response(500, JSON.stringify(
+            {
+              message: "Internal server error."
+            }
+          ));
+          callback(null, response);
       } else {
           console.log("Delete succeeded.");
           callback(null, {
