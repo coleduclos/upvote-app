@@ -1,0 +1,102 @@
+service: lists
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  stage: dev
+  region: us-west-2
+
+  environment:
+    LISTS_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    LIST_ITEMS_TABLE: list-items-${opt:stage, self:provider.stage}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: "*"
+functions:
+  listsGetAll:
+    handler: api/v1/lists.getAll
+    memorySize: 128
+    description: Get all lists.
+    events:
+      - http: 
+          path: v1/lists 
+          method: get
+  listsCreate:
+    handler: api/v1/lists.create
+    memorySize: 128
+    description: Create list.
+    events:
+      - http:
+          path: v1/lists
+          method: post
+  listsGet:
+    handler: api/v1/lists.get
+    memorySize: 128
+    description: Get list details by id.
+    events:
+      - http:
+          path: v1/lists/{id}
+          method: get
+  listItemsGetAll:
+    handler: api/v1/list-items.getAll
+    memorySize: 128
+    description: Get all list items.
+    events:
+      - http: 
+          path: v1/list-items 
+          method: get
+  listItemsCreate:
+    handler: api/v1/list-items.create
+    memorySize: 128
+    description: Create list item.
+    events:
+      - http:
+          path: v1/list-items
+          method: post
+  listItemsGet:
+    handler: api/v1/list-items.get
+    memorySize: 128
+    description: Get list item details by id.
+    events:
+      - http:
+          path: v1/list-items/{id}
+          method: get
+resources:
+  Resources:
+    ListsDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "id"
+            AttributeType: "S"   
+        KeySchema:
+          -
+            AttributeName: "id"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.LISTS_TABLE}
+    ListItemsDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "id"
+            AttributeType: "S"   
+        KeySchema:
+          -
+            AttributeName: "id"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.LIST_ITEMS_TABLE}
+
