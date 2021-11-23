@@ -37,22 +37,15 @@ module.exports.create = (event, context, callback) => {
   const list = new List(title, details, author)
 
   const onPut = (err, data) => {
-    console.log("HELLO")
+    const response = new Response(500, JSON.stringify({'error' : 'internal server error'}));
     if(err) {
       console.error(err);
-      const response = new Response(500, JSON.stringify(
-        {
-          message: "Internal server error."
-        }
-      ));
       callback(null, response);
-      return;
-
     } else {
-      const response = new Response(200, data.Item);
-      callback(null, response);
-      return;
+      response.statusCode = 200;
+      response.body = JSON.stringify(list);
     }
+    callback(null, response);
   }
 
   const listInfo = {
@@ -73,11 +66,10 @@ module.exports.get = (event, context, callback) => {
   };
 
   const onGet = (err, data) => {
+    const response = new Response(500, JSON.stringify({'error' : 'internal server error'}));
     if (err) {
       console.error(err);
-      callback(new Error('Could not retrieve list.'));
     } else {
-      const response = new Response(500, '');
       if ('Item' in data) {
         response.statusCode = 200
         response.body = JSON.stringify(data.Item)
@@ -85,8 +77,8 @@ module.exports.get = (event, context, callback) => {
         response.statusCode = 404
         response.body = JSON.stringify({'error' : 'Not found'})
       }
-      callback(null, response);
     }
+    callback(null, response);
   };
 
   dynamoDb.get(params, onGet)
@@ -101,18 +93,16 @@ module.exports.getAll = (event, context, callback) => {
 
   console.log("Scanning lists table.");
   const onScan = (err, data) => {
+      console.log("GET ALL RESPONSE" + data)
+      const response = new Response(500, JSON.stringify({'error' : 'internal server error'}));
       if (err) {
-          console.error('Scan failed to load data. Error JSON:', JSON.stringify(err, null, 2));
-          callback(err);
-      } else {
+          console.error(err);
+        } else {
           console.log("Scan succeeded.");
-          callback(null, {
-              statusCode: 200,
-              body: JSON.stringify({
-                  data: data.Items
-              })
-          });
+          response.statusCode = 200;
+          response.body = JSON.stringify(data.Items);
       }
+      callback(null, response);
   };
   
   dynamoDb.scan(params, onScan);
@@ -129,23 +119,15 @@ module.exports.delete = (event, context, callback) => {
 
   console.log("Deleting list: " + event.pathParameters.id);
   const onDelete = (err, data) => {
+      const response = new Response(500, JSON.stringify({'error' : 'internal server error'}));
       if (err) {
           console.error(err);
-          const response = new Response(500, JSON.stringify(
-            {
-              message: "Internal server error."
-            }
-          ));
-          callback(null, response);
       } else {
           console.log("Delete succeeded.");
-          callback(null, {
-              statusCode: 200,
-              body: JSON.stringify({
-                  message: "Success"
-              })
-          });
+          response.statusCode = 200;
+          response.body = JSON.stringify({'message' : 'success'});
       }
+      callback(null, response);
   };
 
   dynamoDb.delete(params, onDelete);
