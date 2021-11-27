@@ -3,18 +3,26 @@
 const AWS = require('aws-sdk'); 
 const uuid = require('uuid');
 
-function Response(statusCode, body) {
-    this.statusCode = statusCode;
-    this.body = body;
+class ApiResponse {
+    constructor(statusCode, body) {
+        this.statusCode = statusCode;
+        this.body = body;
+    }
+}
+
+class ApiErrorNotFound extends ApiResponse {
+    constructor() {
+        super(404, JSON.stringify({'error' : 'Not found'}));
+    }
 }
 
 function List(title, details, author){
     const timestamp = new Date().getTime();
-    this.id = uuid.v1()
-    this.title = title
-    this.details = details
-    this.createdAt = timestamp
-    this.updatedAt = timestamp
+    this.id = uuid.v1();
+    this.title = title;
+    this.details = details;
+    this.createdAt = timestamp;
+    this.updatedAt = timestamp;
 };
 
 class ApiHandlerBase {
@@ -22,15 +30,16 @@ class ApiHandlerBase {
         this.tableName = tableName;
         this.dynamoDb = new AWS.DynamoDB.DocumentClient();
     }
+
     // ------- GET ALL ---------
-    getAll(callback){
+    getAll(event, callback){
         var params = {
             TableName: this.tableName
         };
     
         console.log("Scanning lists table.");
         const onScan = (err, data) => {
-            const response = new Response(500, JSON.stringify({'error' : 'internal server error'}));
+            let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
             if (err) {
                 console.error(err);
             } else {
@@ -43,9 +52,10 @@ class ApiHandlerBase {
         
         this.dynamoDb.scan(params, onScan);
     };
-    // ------- GET ONE ---------
-    getOne(id, callback) {
 
+    // ------- GET ONE ---------
+    getOne(event, callback) {
+        const id = event.pathParameters.id;
         const params = {
             TableName: this.tableName,
             Key: {
@@ -53,7 +63,7 @@ class ApiHandlerBase {
             },
         };
         const onGet = (err, data) => {
-            const response = new Response(500, JSON.stringify({'error' : 'internal server error'}));
+            let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
             if (err) {
                 console.error(err);
             } else {
@@ -61,8 +71,7 @@ class ApiHandlerBase {
                     response.statusCode = 200
                     response.body = JSON.stringify(data.Item)
                 } else {
-                    response.statusCode = 404
-                    response.body = JSON.stringify({'error' : 'Not found'})
+                    response = new ApiErrorNotFound();
                 }
             }
             callback(null, response);
@@ -71,23 +80,29 @@ class ApiHandlerBase {
     }
 
     // ------- DELETE ONE ---------
-    delete(id, callback) {
+    delete(event, callback) {
+        const id = event.pathParameters.id;
         var params = {
             TableName: this.tableName,
             Key: {
                 id: id,
             },
+            ReturnValues: "ALL_OLD"
         };
     
         console.debug("Deleting list: " + id);
         const onDelete = (err, data) => {
-            const response = new Response(500, JSON.stringify({'error' : 'internal server error'}));
+            let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
             if (err) {
                 console.error(err);
             } else {
-                console.debug("Delete succeeded.");
-                response.statusCode = 200;
-                response.body = JSON.stringify({'message' : 'success'});
+                if (data.Attributes === undefined){
+                    response = new ApiErrorNotFound()
+                } else {
+                    console.debug("Delete succeeded.");
+                    response.statusCode = 200;
+                    response.body = JSON.stringify({'message' : 'success'});
+                }
             }
             callback(null, response);
         };
@@ -96,8 +111,8 @@ class ApiHandlerBase {
     };
 
     // ------- CREATE ONE ---------
-    create(body, callback){
-        const requestBody = JSON.parse(body);
+    create(event, callback){
+        const requestBody = JSON.parse(event.body);
         const title = requestBody.title;
         const details = requestBody.details;
         const author = requestBody.author;
@@ -114,7 +129,7 @@ class ApiHandlerBase {
         };
 
         const onPut = (err, data) => {
-            const response = new Response(500, JSON.stringify({'error' : 'internal server error'}));
+            let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
             if(err) {
                 console.error(err);
                 callback(null, response);

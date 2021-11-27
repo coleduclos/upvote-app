@@ -36,7 +36,7 @@ test('Test getAll lists non-empty response', done => {
   });
 
 test('Test list not found', done => {
-    AWS.DynamoDB.DocumentClient.prototype.get.mockImplementationOnce((_, callback) => callback(null, {'Item' : {}}));
+    AWS.DynamoDB.DocumentClient.prototype.get.mockImplementationOnce((_, callback) => callback(null, {}));
     const exampleEvent = {'pathParameters' : {'id' : mockId}}
     const lambdaCallback = (err, data) => {
       try {
@@ -84,7 +84,7 @@ test('Test create valid list', done => {
   });
 
   test('Test delete valid list', done => {
-    AWS.DynamoDB.DocumentClient.prototype.delete.mockImplementationOnce((_, callback) => callback(null, {'Item': {'title': mockTitle}}));
+    AWS.DynamoDB.DocumentClient.prototype.delete.mockImplementationOnce((_, callback) => callback(null, {'Attributes': {'title': mockTitle}}));
     const exampleEvent = {'pathParameters' : {'id' : mockId}}
     const lambdaCallback = (err, data) => {
       try {
@@ -98,7 +98,7 @@ test('Test create valid list', done => {
   });
 
   test('Test delete not found', done => {
-    AWS.DynamoDB.DocumentClient.prototype.delete.mockImplementationOnce((_, callback) => callback(null, {'Item': {'title': mockTitle}}));
+    AWS.DynamoDB.DocumentClient.prototype.delete.mockImplementationOnce((_, callback) => callback(null, {}));
     const exampleEvent = {'pathParameters' : {'id' : mockId}}
     const lambdaCallback = (err, data) => {
       try {

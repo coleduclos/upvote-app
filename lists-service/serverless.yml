@@ -15,6 +15,7 @@ provider:
       Action:
         - dynamodb:Query
         - dynamodb:Scan
+        - dynamodb:DeleteItem
         - dynamodb:GetItem
         - dynamodb:PutItem
       Resource: "*"
@@ -30,42 +31,26 @@ functions:
   listsCreate:
     handler: api/v1/lists.create
     memorySize: 128
-    description: Create list.
+    description: Create a list.
     events:
       - http:
           path: v1/lists
           method: post
-  listsGet:
+  listsDelete:
+    handler: api/v1/lists.delete
+    memorySize: 128
+    description: Delete a list.
+    events:
+      - http:
+          path: v1/lists/{id}
+          method: delete
+  listsGetOne:
     handler: api/v1/lists.getOne
     memorySize: 128
     description: Get list details by id.
     events:
       - http:
           path: v1/lists/{id}
-          method: get
-  listItemsGetAll:
-    handler: api/v1/list-items.getAll
-    memorySize: 128
-    description: Get all list items.
-    events:
-      - http: 
-          path: v1/list-items 
-          method: get
-  listItemsCreate:
-    handler: api/v1/list-items.create
-    memorySize: 128
-    description: Create list item.
-    events:
-      - http:
-          path: v1/list-items
-          method: post
-  listItemsGet:
-    handler: api/v1/list-items.getOne
-    memorySize: 128
-    description: Get list item details by id.
-    events:
-      - http:
-          path: v1/list-items/{id}
           method: get
 resources:
   Resources:
