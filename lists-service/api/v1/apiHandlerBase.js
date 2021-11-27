@@ -80,7 +80,7 @@ class ApiHandlerBase {
     }
 
     // ------- DELETE ONE ---------
-    delete(event, callback) {
+    deleteOne(event, callback) {
         const id = event.pathParameters.id;
         var params = {
             TableName: this.tableName,
@@ -111,7 +111,7 @@ class ApiHandlerBase {
     };
 
     // ------- CREATE ONE ---------
-    create(event, callback){
+    createOne(event, callback){
         const requestBody = JSON.parse(event.body);
         const title = requestBody.title;
         const details = requestBody.details;

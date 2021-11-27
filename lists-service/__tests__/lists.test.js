@@ -80,7 +80,7 @@ test('Test create valid list', done => {
         done(error);
       };
     };
-    lists.create(exampleEvent, {}, lambdaCallback)
+    lists.createOne(exampleEvent, {}, lambdaCallback)
   });
 
   test('Test delete valid list', done => {
@@ -94,7 +94,7 @@ test('Test create valid list', done => {
         done(error);
       };
     };
-    lists.delete(exampleEvent, {}, lambdaCallback)
+    lists.deleteOne(exampleEvent, {}, lambdaCallback)
   });
 
   test('Test delete not found', done => {
@@ -108,5 +108,5 @@ test('Test create valid list', done => {
         done(error);
       };
     };
-    lists.delete(exampleEvent, {}, lambdaCallback)
+    lists.deleteOne(exampleEvent, {}, lambdaCallback)
   });

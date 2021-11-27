@@ -4,8 +4,8 @@ const ApiHandlerBase = require('./apiHandlerBase.js')
 const apiHandler = new ApiHandlerBase(process.env.LISTS_TABLE);
 
 // ------- CREATE ONE ---------
-module.exports.create = (event, context, callback) => {
-  apiHandler.create(event, callback);
+module.exports.createOne = (event, context, callback) => {
+  apiHandler.createOne(event, callback);
 };
 
 // ------- GET ONE ---------
@@ -19,6 +19,6 @@ module.exports.getAll = (event, context, callback) => {
 };
 
 // ------- DELETE ONE ---------
-module.exports.delete = (event, context, callback) => {
-  apiHandler.delete(event, callback);
+module.exports.deleteOne = (event, context, callback) => {
+  apiHandler.deleteOne(event, callback);
 };

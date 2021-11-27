@@ -28,16 +28,16 @@ functions:
       - http: 
           path: v1/lists 
           method: get
-  listsCreate:
-    handler: api/v1/lists.create
+  listsCreateOne:
+    handler: api/v1/lists.createOne
     memorySize: 128
     description: Create a list.
     events:
       - http:
           path: v1/lists
           method: post
-  listsDelete:
-    handler: api/v1/lists.delete
+  listsDeleteOne:
+    handler: api/v1/lists.deleteOne
     memorySize: 128
     description: Delete a list.
     events:
