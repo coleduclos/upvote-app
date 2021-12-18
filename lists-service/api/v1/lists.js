@@ -24,6 +24,21 @@ class ListsApiHandler extends ApiHandlerBase {
     const item = new List(title, details, author)
     super.createOne(item, callback)
   }
+  getAll(event, callback){
+    let limit = this.resultsDefaultLimit;
+    let nextCursor = null;
+    if (event.queryStringParameters){
+      if ('limit' in event.queryStringParameters)
+      {
+        limit = event.queryStringParameters.limit;
+      }
+      if ('nextCursor' in event.queryStringParameters){
+        nextCursor = event.queryStringParameters.nextCursor;
+      }
+    }
+
+    super.getAll(callback, limit=limit, nextCursor=nextCursor)
+  }
   getOne(event, callback){
     const key = { 'listId' : event.pathParameters.listId };
     super.getOne(key, callback)
@@ -48,7 +63,8 @@ module.exports.getOne = (event, context, callback) => {
 
 // ------- GET ALL ---------
 module.exports.getAll = (event, context, callback) => {
-  apiHandler.getAll(callback);
+  console.log(event)
+  apiHandler.getAll(event, callback);
 };
 
 // ------- DELETE ONE ---------

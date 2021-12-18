@@ -19,13 +19,19 @@ class ApiHandlerBase {
     constructor(tableName) {
         this.tableName = tableName;
         this.dynamoDb = new AWS.DynamoDB.DocumentClient();
+        this.resultsDefaultLimit = process.env.API_RESULTS_DEFAULT_LIMIT || 100;
     }
 
     // ------- GET ALL ---------
-    getAll(callback){
+    getAll(callback, limit=this.resultsDefaultLimit, nextCursor=null){
         var params = {
-            TableName: this.tableName
+            TableName: this.tableName,
+            Limit: limit
         };
+
+        if (nextCursor) {
+            params.ExclusiveStartKey = JSON.parse(Buffer.from(nextCursor, 'base64').toString('ascii'));
+        }
     
         console.log("Scanning table: " + this.tableName);
         const onScan = (err, data) => {
@@ -35,7 +41,19 @@ class ApiHandlerBase {
             } else {
                 console.log("Scan succeeded.");
                 response.statusCode = 200;
-                response.body = JSON.stringify(data.Items);
+                const responseBody = {
+                    'count' : data.Count,
+                    'limit' : limit,
+                    'data' : data.Items,
+                    'pagination' : {}
+                }
+                if (data.LastEvaluatedKey) {
+                    // Save previousCursor and update nextCursor
+                    responseBody.pagination.previousCusor = nextCursor;
+                    nextCursor = Buffer.from(JSON.stringify(data.LastEvaluatedKey)).toString('base64');
+                    responseBody.pagination.nextCursor = nextCursor;
+                }
+                response.body = JSON.stringify(responseBody);
             }
             callback(null, response);
         };
