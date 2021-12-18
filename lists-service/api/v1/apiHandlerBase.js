@@ -1,7 +1,6 @@
 'use strict';
 
 const AWS = require('aws-sdk'); 
-const uuid = require('uuid');
 
 class ApiResponse {
     constructor(statusCode, body) {
@@ -16,15 +15,6 @@ class ApiErrorNotFound extends ApiResponse {
     }
 }
 
-function List(title, details, author){
-    const timestamp = new Date().getTime();
-    this.id = uuid.v1();
-    this.title = title;
-    this.details = details;
-    this.createdAt = timestamp;
-    this.updatedAt = timestamp;
-};
-
 class ApiHandlerBase {
     constructor(tableName) {
         this.tableName = tableName;
@@ -32,12 +22,12 @@ class ApiHandlerBase {
     }
 
     // ------- GET ALL ---------
-    getAll(event, callback){
+    getAll(callback){
         var params = {
             TableName: this.tableName
         };
     
-        console.log("Scanning lists table.");
+        console.log("Scanning table: " + this.tableName);
         const onScan = (err, data) => {
             let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
             if (err) {
@@ -54,14 +44,12 @@ class ApiHandlerBase {
     };
 
     // ------- GET ONE ---------
-    getOne(event, callback) {
-        const id = event.pathParameters.id;
+    getOne(key, callback) {
         const params = {
             TableName: this.tableName,
-            Key: {
-                id: id,
-            },
+            Key: key
         };
+        console.debug("Getting item: " + key);
         const onGet = (err, data) => {
             let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
             if (err) {
@@ -80,17 +68,14 @@ class ApiHandlerBase {
     }
 
     // ------- DELETE ONE ---------
-    deleteOne(event, callback) {
-        const id = event.pathParameters.id;
+    deleteOne(key, callback) {
         var params = {
             TableName: this.tableName,
-            Key: {
-                id: id,
-            },
+            Key: key,
             ReturnValues: "ALL_OLD"
         };
     
-        console.debug("Deleting list: " + id);
+        console.debug("Deleting item: " + key);
         const onDelete = (err, data) => {
             let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
             if (err) {
@@ -111,23 +96,11 @@ class ApiHandlerBase {
     };
 
     // ------- CREATE ONE ---------
-    createOne(event, callback){
-        const requestBody = JSON.parse(event.body);
-        const title = requestBody.title;
-        const details = requestBody.details;
-        const author = requestBody.author;
-    
-        // TODO: validate body
-        console.log('Validating list...');
-    
-        console.log('Creating list...');
-        const list = new List(title, details, author)
-
+    createOne(item, callback){
         const params = {
             TableName: this.tableName,
-            Item: list,
+            Item: item,
         };
-
         const onPut = (err, data) => {
             let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
             if(err) {
@@ -135,7 +108,7 @@ class ApiHandlerBase {
                 callback(null, response);
             } else {
                 response.statusCode = 200;
-                response.body = JSON.stringify(list);
+                response.body = JSON.stringify(item);
             }
             callback(null, response);
         }

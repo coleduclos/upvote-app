@@ -20,14 +20,6 @@ provider:
         - dynamodb:PutItem
       Resource: "*"
 functions:
-  listsGetAll:
-    handler: api/v1/lists.getAll
-    memorySize: 128
-    description: Get all lists.
-    events:
-      - http: 
-          path: v1/lists 
-          method: get
   listsCreateOne:
     handler: api/v1/lists.createOne
     memorySize: 128
@@ -36,22 +28,62 @@ functions:
       - http:
           path: v1/lists
           method: post
-  listsDeleteOne:
-    handler: api/v1/lists.deleteOne
+  listsGetAll:
+    handler: api/v1/lists.getAll
     memorySize: 128
-    description: Delete a list.
+    description: Get all lists.
     events:
       - http:
-          path: v1/lists/{id}
-          method: delete
+          path: v1/lists 
+          method: get
   listsGetOne:
     handler: api/v1/lists.getOne
     memorySize: 128
     description: Get list details by id.
     events:
       - http:
-          path: v1/lists/{id}
+          path: v1/lists/{listId}
           method: get
+  listsDeleteOne:
+    handler: api/v1/lists.deleteOne
+    memorySize: 128
+    description: Delete a list.
+    events:
+      - http:
+          path: v1/lists/{listId}
+          method: delete
+  listItemsCreateOne:
+    handler: api/v1/listItems.createOne
+    memorySize: 128
+    description: Create a list item.
+    events:
+      - http:
+          path: v1/lists/{listId}/items
+          method: post
+  listItemsGetAll:
+    handler: api/v1/listItems.getAll
+    memorySize: 128
+    description: Get all list items.
+    events:
+      - http:
+          path: v1/lists/{listId}/items
+          method: get
+  listItemsGetOne:
+    handler: api/v1/listItems.getOne
+    memorySize: 128
+    description: Get list item details by id.
+    events:
+      - http:
+          path: v1/lists/{listId}/items/{itemId}
+          method: get
+  listItemsDeleteOne:
+    handler: api/v1/listItems.deleteOne
+    memorySize: 128
+    description: Delete a list item.
+    events:
+      - http:
+          path: v1/lists/{listId}/items/{itemId}
+          method: delete
 resources:
   Resources:
     ListsDynamoDbTable:
@@ -59,11 +91,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: "id"
+            AttributeName: "listId"
             AttributeType: "S"   
         KeySchema:
           -
-            AttributeName: "id"
+            AttributeName: "listId"
             KeyType: "HASH"
         ProvisionedThroughput:
           ReadCapacityUnits: 1
@@ -74,12 +106,18 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: "id"
-            AttributeType: "S"   
+            AttributeName: "listId"
+            AttributeType: "S"
+          -
+            AttributeName: "itemId"
+            AttributeType: "S"
         KeySchema:
           -
-            AttributeName: "id"
+            AttributeName: "listId"
             KeyType: "HASH"
+          -
+            AttributeName: "itemId"
+            KeyType: "RANGE"
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
