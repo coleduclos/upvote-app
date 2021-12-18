@@ -22,6 +22,57 @@ class ApiHandlerBase {
         this.resultsDefaultLimit = process.env.API_RESULTS_DEFAULT_LIMIT || 100;
     }
 
+    generateListResponseBody(data, limit, previousCursor){
+        const responseBody = {
+            'count' : data.Count,
+            'limit' : limit,
+            'data' : data.Items,
+            'pagination' : {
+                'previousCursor' : previousCursor,
+                'nextCursor': null
+            }
+        }
+        if (data.LastEvaluatedKey) {
+            // Set nextCursor
+            const nextCursor = Buffer.from(JSON.stringify(data.LastEvaluatedKey)).toString('base64');
+            responseBody.pagination.nextCursor = nextCursor;
+        }
+        return JSON.stringify(responseBody)
+    }
+    // ------- GET ALL ---------
+    getAllByForeignKey(foreignKey, foreignKeyValue, callback, limit=this.resultsDefaultLimit, nextCursor=null){
+        var params = {
+            TableName: this.tableName,
+            Limit: limit,
+            KeyConditionExpression: "#fk = :fv",
+            ExpressionAttributeNames: {
+                "#fk": foreignKey
+            },
+            ExpressionAttributeValues: {
+                ":fv": foreignKeyValue
+            }
+        };
+
+        if (nextCursor) {
+            params.ExclusiveStartKey = JSON.parse(Buffer.from(nextCursor, 'base64').toString('ascii'));
+        }
+
+        console.log("Querying table: " + this.tableName);
+        const onQuery = (err, data) => {
+            let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
+            if (err) {
+                console.error(err);
+            } else {
+                console.log("Scan succeeded.");
+                response.statusCode = 200;
+                response.body = this.generateListResponseBody(data, limit, nextCursor);
+            }
+            callback(null, response);
+        };
+
+        this.dynamoDb.query(params, onQuery);
+    };
+
     // ------- GET ALL ---------
     getAll(callback, limit=this.resultsDefaultLimit, nextCursor=null){
         var params = {
@@ -32,7 +83,7 @@ class ApiHandlerBase {
         if (nextCursor) {
             params.ExclusiveStartKey = JSON.parse(Buffer.from(nextCursor, 'base64').toString('ascii'));
         }
-    
+
         console.log("Scanning table: " + this.tableName);
         const onScan = (err, data) => {
             let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
@@ -41,23 +92,11 @@ class ApiHandlerBase {
             } else {
                 console.log("Scan succeeded.");
                 response.statusCode = 200;
-                const responseBody = {
-                    'count' : data.Count,
-                    'limit' : limit,
-                    'data' : data.Items,
-                    'pagination' : {}
-                }
-                if (data.LastEvaluatedKey) {
-                    // Save previousCursor and update nextCursor
-                    responseBody.pagination.previousCusor = nextCursor;
-                    nextCursor = Buffer.from(JSON.stringify(data.LastEvaluatedKey)).toString('base64');
-                    responseBody.pagination.nextCursor = nextCursor;
-                }
-                response.body = JSON.stringify(responseBody);
+                response.body = this.generateListResponseBody(data, limit, nextCursor);
             }
             callback(null, response);
         };
-        
+
         this.dynamoDb.scan(params, onScan);
     };
 

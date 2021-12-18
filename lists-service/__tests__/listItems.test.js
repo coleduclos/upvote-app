@@ -9,11 +9,14 @@ jest.mock("aws-sdk")
 const AWS = require('aws-sdk')
 
 test('Test getAll list items empty response w/ default limit', done => {
-  AWS.DynamoDB.DocumentClient.prototype.scan.mockImplementationOnce((_, callback) => callback(null, {
+  AWS.DynamoDB.DocumentClient.prototype.query.mockImplementationOnce((_, callback) => callback(null, {
     'Items' :[],
     'Count' : 0
   }));
-  const exampleEvent = {'queryStringParameters' : null}
+  const exampleEvent = {
+    'pathParameters' : {'listId' : mockId},
+    'queryStringParameters' : null
+  }
   const lambdaCallback = (err, data) => {
     try {
       expect(data.statusCode).toBe(200);
@@ -30,11 +33,14 @@ test('Test getAll list items empty response w/ default limit', done => {
 });
 
 test('Test getAll list items non-empty response w/ default limit', done => {
-    AWS.DynamoDB.DocumentClient.prototype.scan.mockImplementationOnce((_, callback) => callback(null, {
+    AWS.DynamoDB.DocumentClient.prototype.query.mockImplementationOnce((_, callback) => callback(null, {
       'Items' :[{'id' : mockId, 'title': mockTitle}],
       'Count' : 1
     }));
-    const exampleEvent = {'queryStringParameters' : null}
+    const exampleEvent = {
+      'pathParameters' : {'listId' : mockId},
+      'queryStringParameters' : null
+    }
     const lambdaCallback = (err, data) => {
       try {
         expect(data.statusCode).toBe(200);
@@ -52,12 +58,15 @@ test('Test getAll list items non-empty response w/ default limit', done => {
 
 test('Test getAll list items non-empty response w/ explicit limit & pagination', done => {
     const lastEvaluatedKey = { 'listId': mockId };
-    AWS.DynamoDB.DocumentClient.prototype.scan.mockImplementationOnce((_, callback) => callback(null, {
+    AWS.DynamoDB.DocumentClient.prototype.query.mockImplementationOnce((_, callback) => callback(null, {
       'Items' :[{'id' : mockId, 'title': mockTitle}],
       'Count' : 1,
       'LastEvaluatedKey': lastEvaluatedKey
     }));
-    const exampleEvent = {'queryStringParameters' : {'limit':1}}
+    const exampleEvent = {
+      'pathParameters' : {'listId' : mockId},
+      'queryStringParameters' : {'limit':1}
+    }
     const lambdaCallback = (err, data) => {
       try {
         expect(data.statusCode).toBe(200);
@@ -65,7 +74,7 @@ test('Test getAll list items non-empty response w/ explicit limit & pagination',
         expect(responseBody.data.length).toBe(1);
         expect(responseBody.count).toBe(1);
         expect(responseBody.limit).toBe(1);
-        expect(responseBody.pagination.previousCursor).toBeUndefined();
+        expect(responseBody.pagination.previousCursor).toBeNull();
         let nextCursor = Buffer.from(responseBody.pagination.nextCursor, 'base64').toString('ascii')
         expect(nextCursor).toBe(JSON.stringify(lastEvaluatedKey));
         done();

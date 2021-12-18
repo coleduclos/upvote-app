@@ -27,6 +27,8 @@ class ListItemsApiHandler extends ApiHandlerBase {
     super.createOne(item, callback)
   }
   getAll(event, callback){
+    const foreignKey = 'listId'
+    const foreignKeyValue = event.pathParameters.listId;
     let limit = this.resultsDefaultLimit;
     let nextCursor = null;
     if (event.queryStringParameters){
@@ -38,7 +40,7 @@ class ListItemsApiHandler extends ApiHandlerBase {
         nextCursor = event.queryStringParameters.nextCursor;
       }
     }
-    super.getAll(callback, limit=limit, nextCursor=nextCursor)
+    super.getAllByForeignKey(foreignKey, foreignKeyValue, callback, limit=limit, nextCursor=nextCursor)
   }
   getOne(event, callback){
     const key = { 

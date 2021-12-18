@@ -65,7 +65,7 @@ test('Test getAll lists non-empty response w/ explicit limit & pagination', done
         expect(responseBody.data.length).toBe(1);
         expect(responseBody.count).toBe(1);
         expect(responseBody.limit).toBe(1);
-        expect(responseBody.pagination.previousCursor).toBeUndefined();
+        expect(responseBody.pagination.previousCursor).toBeNull();
         let nextCursor = Buffer.from(responseBody.pagination.nextCursor, 'base64').toString('ascii')
         expect(nextCursor).toBe(JSON.stringify(lastEvaluatedKey));
         done();
