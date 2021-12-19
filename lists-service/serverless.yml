@@ -1,14 +1,27 @@
 service: lists
+
+plugins:
+  - serverless-localstack
+
+custom:
+  localstack:
+    debug: true
+    stages:
+      - local
+    host: http://localhost
+    networks:
+      - host
 provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: 20201221
-  stage: dev
+  stage: local
   region: us-west-2
 
   environment:
     LISTS_TABLE: ${self:service}-${opt:stage, self:provider.stage}
     LIST_ITEMS_TABLE: list-items-${opt:stage, self:provider.stage}
+    VOTES_TABLE: votes-${opt:stage, self:provider.stage}
 
   iamRoleStatements:
     - Effect: Allow
@@ -122,4 +135,25 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.LIST_ITEMS_TABLE}
+    VotesDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "userId"
+            AttributeType: "S"
+          -
+            AttributeName: "listId_itemId"
+            AttributeType: "S"
+        KeySchema:
+          -
+            AttributeName: "userId"
+            KeyType: "HASH"
+          -
+            AttributeName: "listId_itemId"
+            KeyType: "RANGE"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.VOTES_TABLE}
 
