@@ -1,4 +1,4 @@
-service: lists
+service: upvote
 provider:
   name: aws
   runtime: nodejs12.x
@@ -7,8 +7,9 @@ provider:
   region: us-west-2
 
   environment:
-    LISTS_TABLE: ${self:service}-${opt:stage, self:provider.stage}
-    LIST_ITEMS_TABLE: list-items-${opt:stage, self:provider.stage}
+    LISTS_TABLE: ${self:service}-${opt:stage, self:provider.stage}-lists
+    LIST_ITEMS_TABLE: ${self:service}-${opt:stage, self:provider.stage}-list-items
+    VOTES_TABLE: ${self:service}-${opt:stage, self:provider.stage}-votes
 
   iamRoleStatements:
     - Effect: Allow
@@ -19,6 +20,17 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
       Resource: "*"
+custom:
+  authorizor:
+    type: COGNITO_USER_POOLS
+    authorizerId:
+      Ref: ApiGatewayAuthorizer
+    scopes:
+      - phone
+      - email
+      - openid
+      - profile
+      - aws.cognito.signin.user.admin
 functions:
   listsCreateOne:
     handler: api/v1/lists.createOne
@@ -28,6 +40,7 @@ functions:
       - http:
           path: v1/lists
           method: post
+          authorizer: ${self:custom.authorizor}
   listsGetAll:
     handler: api/v1/lists.getAll
     memorySize: 128
@@ -36,6 +49,7 @@ functions:
       - http:
           path: v1/lists 
           method: get
+          authorizer: ${self:custom.authorizor}
   listsGetOne:
     handler: api/v1/lists.getOne
     memorySize: 128
@@ -44,6 +58,7 @@ functions:
       - http:
           path: v1/lists/{listId}
           method: get
+          authorizer: ${self:custom.authorizor}
   listsDeleteOne:
     handler: api/v1/lists.deleteOne
     memorySize: 128
@@ -52,6 +67,7 @@ functions:
       - http:
           path: v1/lists/{listId}
           method: delete
+          authorizer: ${self:custom.authorizor}
   listItemsCreateOne:
     handler: api/v1/listItems.createOne
     memorySize: 128
@@ -60,6 +76,7 @@ functions:
       - http:
           path: v1/lists/{listId}/items
           method: post
+          authorizer: ${self:custom.authorizor}
   listItemsGetAll:
     handler: api/v1/listItems.getAll
     memorySize: 128
@@ -68,6 +85,7 @@ functions:
       - http:
           path: v1/lists/{listId}/items
           method: get
+          authorizer: ${self:custom.authorizor}
   listItemsGetOne:
     handler: api/v1/listItems.getOne
     memorySize: 128
@@ -76,6 +94,7 @@ functions:
       - http:
           path: v1/lists/{listId}/items/{itemId}
           method: get
+          authorizer: ${self:custom.authorizor}
   listItemsDeleteOne:
     handler: api/v1/listItems.deleteOne
     memorySize: 128
@@ -84,8 +103,74 @@ functions:
       - http:
           path: v1/lists/{listId}/items/{itemId}
           method: delete
+          authorizer: ${self:custom.authorizor}
+  votesCreateOne:
+    handler: api/v1/votes.createOne
+    memorySize: 128
+    description: Submit a vote.
+    events:
+      - http:
+          path: v1/votes
+          method: post
+          authorizer: ${self:custom.authorizor}
+  votesDeleteOne:
+    handler: api/v1/votes.deleteOne
+    memorySize: 128
+    description: Remove a vote.
+    events:
+      - http:
+          path: v1/votes/{voteId}
+          method: delete
+          authorizer: ${self:custom.authorizor}
 resources:
   Resources:
+    CognitoUserPool:
+      Type: "AWS::Cognito::UserPool"
+      Properties:
+        MfaConfiguration: OFF
+        UserPoolName: ${self:service}-${opt:stage, self:provider.stage}-user-pool
+        UsernameAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 6
+            RequireLowercase: True
+            RequireNumbers: True
+            RequireSymbols: True
+            RequireUppercase: True
+    CognitoUserPoolClient:
+      Type: "AWS::Cognito::UserPoolClient"
+      Properties:
+        AllowedOAuthFlows:
+          - implicit
+        AllowedOAuthFlowsUserPoolClient: True
+        AllowedOAuthScopes:
+          - email
+          - openid
+        CallbackURLs:
+          - http://localhost:3000
+        ClientName: ${self:service}-${opt:stage, self:provider.stage}-user-pool-client
+        GenerateSecret: False
+        UserPoolId:
+          Ref: CognitoUserPool
+    CognitoUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: ${self:service}-${opt:stage, self:provider.stage}
+        UserPoolId:
+          Ref: CognitoUserPool
+    ApiGatewayAuthorizer:
+      DependsOn:
+        - ApiGatewayRestApi
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: ${self:service}-${opt:stage, self:provider.stage}-cognito-authorizer
+        IdentitySource: method.request.header.Authorization
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        Type: COGNITO_USER_POOLS
+        ProviderARNs:
+          - Fn::GetAtt: [CognitoUserPool, Arn]
     ListsDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
       Properties:
@@ -122,4 +207,24 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.LIST_ITEMS_TABLE}
-
+    VotesDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "userId"
+            AttributeType: "S"
+          -
+            AttributeName: "listId_itemId"
+            AttributeType: "S"
+        KeySchema:
+          -
+            AttributeName: "userId"
+            KeyType: "HASH"
+          -
+            AttributeName: "listId_itemId"
+            KeyType: "RANGE"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.VOTES_TABLE}
