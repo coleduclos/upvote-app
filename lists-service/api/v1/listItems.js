@@ -105,7 +105,7 @@ class ListItemsApiHandler {
   } 
 }
 
-const apiHandler = new ListItemsApiHandler(process.env.LIST_ITEMS_TABLE);
+const apiHandler = new ListItemsApiHandler();
 
 // ------- CREATE ONE ---------
 module.exports.createOne = (event, context, callback) => {
