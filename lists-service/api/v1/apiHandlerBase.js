@@ -172,7 +172,7 @@ class ApiHandlerBase {
 
         this.dynamoDb.put(params, onPut)
     };
-  
+
 }
 
 module.exports = ApiHandlerBase

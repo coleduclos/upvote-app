@@ -3,7 +3,7 @@ const uuid = require('uuid');
 
 
 const ApiHandlerBase = require('./apiHandlerBase.js')
-const utils = require('./utils.js')
+const auth = require('./utils/auth.js')
 
 function Vote(userId, listId, itemId, score){
   const timestamp = new Date().getTime();
@@ -58,7 +58,7 @@ const apiHandler = new VotesApiHandler(process.env.VOTES_TABLE);
 
 // ------- CREATE ONE ---------
 module.exports.createOne = (event, context, callback) => {
-  utils.getUserIdFromRequest(event, function(err, userId) {
+  auth.getUserIdFromRequest(event, function(err, userId) {
     apiHandler.createOne(event, userId, callback);
   })
 };

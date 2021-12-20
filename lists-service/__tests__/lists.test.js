@@ -1,10 +1,16 @@
 const lists = require('../api/v1/lists');
 
 jest.setTimeout(1000);
-let mockId = 1;
+let mockId = '0';
+let mockUserId = '1';
 let mockTitle = 'Test Title';
 
 jest.mock("aws-sdk")
+jest.mock('../api/v1/utils/auth.js', () => {
+    return {
+      getUserIdFromRequest: jest.fn().mockImplementationOnce((_, callback) => callback(null, mockUserId))
+    };
+});
 
 const AWS = require('aws-sdk')
 
@@ -110,12 +116,18 @@ test('Test get valid list', done => {
 
 test('Test create valid list', done => {
     AWS.DynamoDB.DocumentClient.prototype.put.mockImplementationOnce((_, callback) => callback(null, {'Item': {'title': mockTitle}}));
-    const exampleEvent = {'body' : '{\"title\":\"'+mockTitle+'\",\"details\":\"test details\"}'}
+    const exampleEvent = {
+      'headers' : {
+        'Authorization': 'Bearer xxxx'
+      },
+      'body' : '{\"title\":\"'+mockTitle+'\",\"details\":\"test details\"}'
+    }
     const lambdaCallback = (err, data) => {
       try {
         let responseBody = JSON.parse(data.body);
         expect(data.statusCode).toBe(200);
         expect(responseBody.title).toBe(mockTitle);
+        expect(responseBody.createdBy).toBe(mockUserId);
         done();
       } catch (error) {
         done(error);
@@ -126,7 +138,12 @@ test('Test create valid list', done => {
 
   test('Test delete valid list', done => {
     AWS.DynamoDB.DocumentClient.prototype.delete.mockImplementationOnce((_, callback) => callback(null, {'Attributes': {'title': mockTitle}}));
-    const exampleEvent = {'pathParameters' : {'listId' : mockId}}
+    const exampleEvent = {
+      'headers' : {
+        'Authorization': 'Bearer xxxx'
+      },
+      'pathParameters' : {'listId' : mockId}
+    }
     const lambdaCallback = (err, data) => {
       try {
         expect(data.statusCode).toBe(200);
@@ -140,7 +157,12 @@ test('Test create valid list', done => {
 
   test('Test delete list not found', done => {
     AWS.DynamoDB.DocumentClient.prototype.delete.mockImplementationOnce((_, callback) => callback(null, {}));
-    const exampleEvent = {'pathParameters' : {'listId' : mockId}}
+    const exampleEvent = {
+      'headers' : {
+        'Authorization': 'Bearer xxxx'
+      },
+      'pathParameters' : {'listId' : mockId}
+    }
     const lambdaCallback = (err, data) => {
       try {
         expect(data.statusCode).toBe(404);

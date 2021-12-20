@@ -8,6 +8,7 @@ function getAccessToken(request){
 }
 function getUserInfo(accessToken, callback){
     console.debug('Attempting to lookup user info via access token...')
+    // TODO: move hostname to environment variable
     const options = {
         hostname: 'upvote-dev.auth.us-west-2.amazoncognito.com',
         port: 443,

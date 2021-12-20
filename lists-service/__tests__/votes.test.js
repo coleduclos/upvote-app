@@ -6,9 +6,8 @@ let mockUserId = '1';
 let mockScore = 1
 
 jest.mock("aws-sdk")
-// jest.mock('../api/v1/utils.js');
 
-jest.mock('../api/v1/utils.js', () => {
+jest.mock('../api/v1/utils/auth.js', () => {
     return {
       getUserIdFromRequest: jest.fn().mockImplementationOnce((_, callback) => callback(null, mockUserId))
     };
@@ -16,7 +15,6 @@ jest.mock('../api/v1/utils.js', () => {
 
 
 const AWS = require('aws-sdk')
-const utils = require('../api/v1/utils.js')
 
 test('Test getAll votes empty response w/ default limit', done => {
   AWS.DynamoDB.DocumentClient.prototype.scan.mockImplementationOnce((_, callback) => callback(null, {
