@@ -4,13 +4,14 @@ const uuid = require('uuid');
 
 const ApiHandlerBase = require('./apiHandlerBase.js')
 
-function List(title, details, author){
+function List(title, details, createdBy){
   const timestamp = new Date().getTime();
   this.listId = uuid.v1();
   this.title = title;
   this.details = details;
   this.createdAt = timestamp;
   this.updatedAt = timestamp;
+  this.createdBy = createdBy;
 };
 
 class ListsApiHandler extends ApiHandlerBase {
@@ -64,6 +65,7 @@ module.exports.getOne = (event, context, callback) => {
 // ------- GET ALL ---------
 module.exports.getAll = (event, context, callback) => {
   console.log(event)
+  console.log(context)
   apiHandler.getAll(event, callback);
 };
 

@@ -3,12 +3,13 @@ const uuid = require('uuid');
 
 
 const ApiHandlerBase = require('./apiHandlerBase.js')
+const utils = require('./utils.js')
 
 function Vote(userId, listId, itemId, score){
   const timestamp = new Date().getTime();
   this.voteId = uuid.v1();
   this.userId = userId;
-  this.listId_itemId = list_id + "_" + itemId;
+  this.listId_itemId = listId + "_" + itemId;
   this.listId = listId;
   this.itemId = itemId;
   this.score = score;
@@ -17,7 +18,8 @@ function Vote(userId, listId, itemId, score){
 };
 
 class VotesApiHandler extends ApiHandlerBase {
-  createOne(event, callback){
+  createOne(event, userId, callback){
+    console.log('USER ID: ' + userId)
     const requestBody = JSON.parse(event.body);
     const listId = requestBody.listId;
     const itemId = requestBody.itemId;
@@ -56,7 +58,9 @@ const apiHandler = new VotesApiHandler(process.env.VOTES_TABLE);
 
 // ------- CREATE ONE ---------
 module.exports.createOne = (event, context, callback) => {
-  apiHandler.createOne(event, callback);
+  utils.getUserIdFromRequest(event, function(err, userId) {
+    apiHandler.createOne(event, userId, callback);
+  })
 };
 
 // ------- GET ONE ---------

@@ -3,10 +3,20 @@ const votes = require('../api/v1/votes');
 jest.setTimeout(1000);
 let mockId = '0';
 let mockUserId = '1';
+let mockScore = 1
 
 jest.mock("aws-sdk")
+// jest.mock('../api/v1/utils.js');
+
+jest.mock('../api/v1/utils.js', () => {
+    return {
+      getUserIdFromRequest: jest.fn().mockImplementationOnce((_, callback) => callback(null, mockUserId))
+    };
+});
+
 
 const AWS = require('aws-sdk')
+const utils = require('../api/v1/utils.js')
 
 test('Test getAll votes empty response w/ default limit', done => {
   AWS.DynamoDB.DocumentClient.prototype.scan.mockImplementationOnce((_, callback) => callback(null, {
@@ -110,13 +120,18 @@ test('Test get valid vote', done => {
 
 test('Test create valid vote', done => {
     AWS.DynamoDB.DocumentClient.prototype.put.mockImplementationOnce((_, callback) => callback(null, {'Item': {'userId': mockUserId, 'score' : 1}}));
-    const exampleEvent = {'body' : '{\"userId\":\"'+mockUserId+'\",\"score\": 1}'}
+    const exampleEvent = {
+      'headers' : {
+        'Authorization': 'Bearer xxxx'
+      },
+      'body' : '{\"userId\":\"'+mockUserId+'\",\"score\": '+mockScore+'}'
+    }
     const lambdaCallback = (err, data) => {
       try {
         let responseBody = JSON.parse(data.body);
         expect(data.statusCode).toBe(200);
         expect(responseBody.userId).toBe(mockUserId);
-        expect(responseBody.score).toBe(score);
+        expect(responseBody.score).toBe(mockScore);
         done();
       } catch (error) {
         done(error);

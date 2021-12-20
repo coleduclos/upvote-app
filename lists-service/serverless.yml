@@ -26,10 +26,8 @@ custom:
     authorizerId:
       Ref: ApiGatewayAuthorizer
     scopes:
-      - phone
       - email
       - openid
-      - profile
       - aws.cognito.signin.user.admin
 functions:
   listsCreateOne:
@@ -147,6 +145,7 @@ resources:
         AllowedOAuthScopes:
           - email
           - openid
+          - aws.cognito.signin.user.admin
         CallbackURLs:
           - http://localhost:3000
         ClientName: ${self:service}-${opt:stage, self:provider.stage}-user-pool-client
