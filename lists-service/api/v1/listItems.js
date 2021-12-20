@@ -1,35 +1,80 @@
 'use strict';
 const uuid = require('uuid');
+const api = require('./utils/api.js')
+const auth = require('./utils/auth.js')
 
+const DynamoDbClient = require('./utils/dynamoDbClient.js')
 
-const ApiHandlerBase = require('./apiHandlerBase.js')
-
-function ListItem(listId, title, details, author){
+function ListItem(listId, title, details, createdBy){
   const timestamp = new Date().getTime();
   this.itemId = uuid.v1()
   this.listId = listId
   this.title = title
   this.details = details
+  this.createdBy = createdBy
   this.createdAt = timestamp
   this.updatedAt = timestamp
 };
 
-class ListItemsApiHandler extends ApiHandlerBase {
-  createOne(event, callback){
+class ListItemsDbClient {
+  constructor(){
+    this.dbClient = new DynamoDbClient(process.env.LIST_ITEMS_TABLE)
+  }
+  createOne(listId, title, details, createdBy, callback){
+    const item = new ListItem(listId, title, details, createdBy)
+    this.dbClient.createItem(item, callback);
+  }
+  deleteOne(listId, itemId, callback){
+    const key = { 
+      'listId' : listId,
+      'itemId' : itemId
+    };
+    this.dbClient.deleteItem(key, callback);
+  }
+  getOne(listId, itemId, callback){
+    const key = { 
+      'listId' : listId,
+      'itemId' : itemId
+    };
+    this.dbClient.getItem(key, callback);
+  }
+  getAllByListId(listId, limit, nextCursor, callback){
+    let exclusiveStartKey = null;
+    if (nextCursor) {
+      exclusiveStartKey = JSON.parse(Buffer.from(nextCursor, 'base64').toString('ascii'));
+    }
+    const keyConditionExpression = "#fk = :fv";
+    const expressionAttributeNames = {
+        "#fk": "listId"
+    };
+    const expressionAttributeValues = {
+        ":fv": listId
+    }
+    this.dbClient.queryItems(keyConditionExpression, expressionAttributeNames, 
+      expressionAttributeValues, limit, exclusiveStartKey, callback);
+  }
+}
+
+class ListItemsApiHandler {
+  constructor(){
+    this.apiResultsDefaultLimit = process.env.API_RESULTS_DEFAULT_LIMIT || 100;
+    this.dbClient = new ListItemsDbClient();
+  }
+  createOne(event, userId, callback){
     const requestBody = JSON.parse(event.body);
     const listId = event.pathParameters.listId;
     const title = requestBody.title;
     const details = requestBody.details;
     const author = requestBody.author;
     // TODO: validate request
-    console.debug('Validating list item...');
-    const item = new ListItem(listId, title, details, author)
-    super.createOne(item, callback)
+    console.debug('Validating request...');
+    this.dbClient.createOne(listId, title, details, userId, function(err, data){
+      api.createOneCallback(err, data, callback);
+    })
   }
-  getAll(event, callback){
-    const foreignKey = 'listId'
-    const foreignKeyValue = event.pathParameters.listId;
-    let limit = this.resultsDefaultLimit;
+  getAllByListId(event, callback){
+    const listId = event.pathParameters.listId;
+    let limit = this.apiResultsDefaultLimit;
     let nextCursor = null;
     if (event.queryStringParameters){
       if ('limit' in event.queryStringParameters)
@@ -40,21 +85,23 @@ class ListItemsApiHandler extends ApiHandlerBase {
         nextCursor = event.queryStringParameters.nextCursor;
       }
     }
-    super.getAllByForeignKey(foreignKey, foreignKeyValue, callback, limit=limit, nextCursor=nextCursor)
+    this.dbClient.getAllByListId(listId, limit, nextCursor, function(err, data){
+      api.getAllCallback(err, data, limit, nextCursor, callback)
+    })
   }
   getOne(event, callback){
-    const key = { 
-      'listId' : event.pathParameters.listId,
-      'itemId' : event.pathParameters.itemId
-    };
-    super.getOne(key, callback)
+    const listId = event.pathParameters.listId;
+    const itemId = event.pathParameters.itemId;
+    this.dbClient.getOne(listId, itemId, function(err, data){
+      api.getOneCallback(err, data, callback)
+    });
   }
-  deleteOne(event, callback){
-    const key = { 
-      'listId' : event.pathParameters.listId,
-      'itemId' : event.pathParameters.itemId
-    };
-    super.deleteOne(key, callback)
+  deleteOne(event, userId, callback){
+    const listId = event.pathParameters.listId;
+    const itemId = event.pathParameters.itemId;
+    this.dbClient.deleteOne(listId, itemId, function(err, data){
+      api.deleteOneCallback(err, data, callback)
+    });
   } 
 }
 
@@ -62,7 +109,9 @@ const apiHandler = new ListItemsApiHandler(process.env.LIST_ITEMS_TABLE);
 
 // ------- CREATE ONE ---------
 module.exports.createOne = (event, context, callback) => {
-  apiHandler.createOne(event, callback);
+  auth.getUserIdFromRequest(event, function(err, userId) {
+    apiHandler.createOne(event, userId, callback);
+  });
 };
 
 // ------- GET ONE ---------
@@ -71,11 +120,11 @@ module.exports.getOne = (event, context, callback) => {
 };
 
 // ------- GET ALL ---------
-module.exports.getAll = (event, context, callback) => {
-  apiHandler.getAll(event, callback);
+module.exports.getAllByListId = (event, context, callback) => {
+  apiHandler.getAllByListId(event, callback);
 };
 
 // ------- DELETE ONE ---------
 module.exports.deleteOne = (event, context, callback) => {
-  apiHandler.deleteOne(event, callback);
+  apiHandler.deleteOne(event, "", callback);
 };

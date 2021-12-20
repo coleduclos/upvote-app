@@ -15,7 +15,7 @@ function List(title, details, createdBy){
   this.createdBy = createdBy;
 };
 
-class ListDbClient {
+class ListsDbClient {
   constructor(){
     this.dbClient = new DynamoDbClient(process.env.LISTS_TABLE)
   }
@@ -41,9 +41,9 @@ class ListDbClient {
 }
 
 class ListsApiHandler {
-
   constructor(){
     this.apiResultsDefaultLimit = process.env.API_RESULTS_DEFAULT_LIMIT || 100;
+    this.dbClient = new ListsDbClient();
   }
 
   createOne(event, userId, callback){
@@ -52,8 +52,7 @@ class ListsApiHandler {
     const details = requestBody.details;
     // TODO: validate request
     console.debug('Validating request...');
-    const dbClient = new ListDbClient();
-    dbClient.createOne(title, details, userId, function(err, data){
+    this.dbClient.createOne(title, details, userId, function(err, data){
       api.createOneCallback(err, data, callback);
     })
   }
@@ -69,22 +68,19 @@ class ListsApiHandler {
         nextCursor = event.queryStringParameters.nextCursor;
       }
     }
-    const dbClient = new ListDbClient();
-    dbClient.getAll(limit, nextCursor, function(err, data){
+    this.dbClient.getAll(limit, nextCursor, function(err, data){
       api.getAllCallback(err, data, limit, nextCursor, callback)
     })
   }
   getOne(event, callback){
     const listId = event.pathParameters.listId;
-    const dbClient = new ListDbClient();
-    dbClient.getOne(listId, function(err, data){
+    this.dbClient.getOne(listId, function(err, data){
       api.getOneCallback(err, data, callback)
     });
   }
   deleteOne(event, userId, callback){
     const listId = event.pathParameters.listId;
-    const dbClient = new ListDbClient();
-    dbClient.deleteOne(listId, function(err, data){
+    this.dbClient.deleteOne(listId, function(err, data){
       api.deleteOneCallback(err, data, callback)
     });
   } 

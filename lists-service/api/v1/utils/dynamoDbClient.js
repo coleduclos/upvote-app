@@ -13,6 +13,10 @@ class DynamoDbClient {
             TableName: this.tableName,
             Item: item,
         };
+
+        console.debug("Creating item in DynamoDB: ");
+        console.debug(params)
+
         const onPut = (err, data) => {
             if(err) {
                 console.error('Could not create item in DynamoDB!')
@@ -33,7 +37,7 @@ class DynamoDbClient {
             ReturnValues: "ALL_OLD"
         };
     
-        console.debug("Deleting item: ");
+        console.debug("Deleting item from DynamoDB: ");
         console.debug(params)
         const onDelete = (err, data) => {
             if (err) {
@@ -60,7 +64,7 @@ class DynamoDbClient {
             TableName: this.tableName,
             Key: key
         };
-        console.debug("Getting item: ");
+        console.debug("Getting item from DynamoDB: ");
         console.debug(params);
         const onGet = (err, data) => {
             if (err) {
@@ -86,7 +90,7 @@ class DynamoDbClient {
             params.ExclusiveStartKey = exclusiveStartKey;
         }
 
-        console.debug("Scanning table: ")
+        console.debug("Scanning DynamoDB table: ")
         console.debug(params);
         const onScan = (err, data) => {
             if (err) {
@@ -100,6 +104,36 @@ class DynamoDbClient {
         };
 
         this.dynamoDb.scan(params, onScan);
+    }
+
+    queryItems(keyConditionExpression, expressionAttributeNames, 
+        expressionAttributeValues, limit, exclusiveStartKey, callback){
+        var params = {
+            TableName: this.tableName,
+            KeyConditionExpression: keyConditionExpression,
+            ExpressionAttributeNames: expressionAttributeNames,
+            ExpressionAttributeValues: expressionAttributeValues
+        };
+        if (limit) {
+            params.Limit = limit;
+        }
+        if (exclusiveStartKey) {
+            params.ExclusiveStartKey = exclusiveStartKey;
+        }
+
+        console.debug("Querying DynamoDB table: ")
+        console.debug(params);
+        const onQuery = (err, data) => {
+            if (err) {
+                console.error('Could not query DynamoDB table!')
+                console.error(err);
+                callback(err, null);
+            } else {
+                console.log("Successfully queried DynamoDB table.");
+                callback(null, data);
+            }
+        };
+        this.dynamoDb.query(params, onQuery);
     }
 }
 

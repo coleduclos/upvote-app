@@ -76,7 +76,7 @@ functions:
           method: post
           authorizer: ${self:custom.authorizor}
   listItemsGetAll:
-    handler: api/v1/listItems.getAll
+    handler: api/v1/listItems.getAllByListId
     memorySize: 128
     description: Get all list items.
     events:

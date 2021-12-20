@@ -1,10 +1,17 @@
 const listItems = require('../api/v1/listItems');
 
 jest.setTimeout(1000);
-let mockId = 1;
+let mockId = '0';
+let mockUserId = '1';
 let mockTitle = 'Test Title';
 
 jest.mock("aws-sdk")
+
+jest.mock('../api/v1/utils/auth.js', () => {
+  return {
+    getUserIdFromRequest: jest.fn().mockImplementationOnce((_, callback) => callback(null, mockUserId))
+  };
+});
 
 const AWS = require('aws-sdk')
 
@@ -29,7 +36,7 @@ test('Test getAll list items empty response w/ default limit', done => {
       done(error);
     };
   };
-  listItems.getAll(exampleEvent, {}, lambdaCallback)
+  listItems.getAllByListId(exampleEvent, {}, lambdaCallback)
 });
 
 test('Test getAll list items non-empty response w/ default limit', done => {
@@ -53,7 +60,7 @@ test('Test getAll list items non-empty response w/ default limit', done => {
         done(error);
       };
     };
-    listItems.getAll(exampleEvent, {}, lambdaCallback)
+    listItems.getAllByListId(exampleEvent, {}, lambdaCallback)
   });
 
 test('Test getAll list items non-empty response w/ explicit limit & pagination', done => {
@@ -82,7 +89,7 @@ test('Test getAll list items non-empty response w/ explicit limit & pagination',
         done(error);
       };
     };
-    listItems.getAll(exampleEvent, {}, lambdaCallback)
+    listItems.getAllByListId(exampleEvent, {}, lambdaCallback)
   });
 
 test('Test list item not found', done => {
@@ -125,6 +132,9 @@ test('Test get valid list item', done => {
 test('Test create valid list item', done => {
     AWS.DynamoDB.DocumentClient.prototype.put.mockImplementationOnce((_, callback) => callback(null, {'Item': {'title': mockTitle}}));
     const exampleEvent = {
+      'headers' : {
+        'Authorization': 'Bearer xxxx'
+      },
       'body' : '{\"title\":\"'+mockTitle+'\",\"details\":\"test details\"}',
       'pathParameters' : {'listId' : mockId}
     }
