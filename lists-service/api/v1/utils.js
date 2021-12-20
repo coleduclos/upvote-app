@@ -1,37 +1,55 @@
 'use strict';
 
-const AWS = require('aws-sdk');
+const https = require('https');
 
 function getAccessToken(request){
-    const authHeader = request.headers.Authorization;
-    // Remove the term "Bearer " from token
-    return authHeader.substring(7);
+    const accessToken = request.headers.Authorization;
+    return accessToken;
 }
-function getUser(accessToken, callback){
-    var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
-    var params = { AccessToken: accessToken};
-    cognitoidentityserviceprovider.getUser(params, function(err, data) {
-        if (err) {
-            console.error('Could not get user info from access token!')
-            console.error(err, err.stack)
-            callback(err, null)
-        } else {
-            console.log('Successfully obtained the user info from access token.')
-            callback(null, data);
+function getUserInfo(accessToken, callback){
+    console.debug('Attempting to lookup user info via access token...')
+    const options = {
+        hostname: 'upvote-dev.auth.us-west-2.amazoncognito.com',
+        port: 443,
+        path: '/oauth2/userInfo',
+        method: 'GET',
+        headers: {
+            'Authorization' : accessToken
         }
+    }
+    var req = https.request(options, (resp) => {
+        let data = '';
+        // A chunk of data has been received.
+        resp.on('data', (chunk) => {
+            data += chunk;
+        });
+        resp.on('end', () => {
+            if (resp.statusCode == 200) {
+                console.debug('Successfully obtained the user info from access token.')
+                callback(null, JSON.parse(data));
+            } else {
+                console.error('Could not find user info via access token! Status code: ' + resp.statusCode)
+                callback(new Error('Unexpected status code while looking up user info'), null);
+            }
+        });
+    })
+    req.on("error", (err) => {
+        console.error('Could not get user info from access token!')
+        console.error(err, err.stack)
+        callback(err, null)
     });
+    req.end();
 }
 
 function getUserIdFromRequest(request, callback){
     const accessToken = getAccessToken(request);
-    console.log('Attempting to get user id from access token...' + accessToken)
-    getUser(accessToken, function(err, data) {
+    console.debug('Attempting to lookup user id via access token...')
+    getUserInfo(accessToken, function(err, data) {
         if (err) {
-            console.error('Could not get userId from access token!')
+            console.error('Could not find user id via access token!')
             callback(err, null)
         } else {
-            const userId = data.UserAttributes.sub
-            console.log(data, userId)
+            const userId = data.sub
             callback(null, userId)
         }
     })
