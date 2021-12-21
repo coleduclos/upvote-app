@@ -82,6 +82,32 @@ test('Test getAll lists non-empty response w/ explicit limit & pagination', done
     lists.getAll(exampleEvent, {}, lambdaCallback)
   });
 
+test('Test getAll lists non-empty response w/ filtering, explicit limit, & pagination', done => {
+  const lastEvaluatedKey = { 'listId': mockId };
+  AWS.DynamoDB.DocumentClient.prototype.scan.mockImplementationOnce((_, callback) => callback(null, {
+    'Items' :[{'listId' : mockId, 'title': mockTitle, 'createdBy' : mockUserId}],
+    'Count' : 1,
+    'LastEvaluatedKey': lastEvaluatedKey
+  }));
+  const exampleEvent = {'queryStringParameters' : {'limit':1, 'createdBy' : mockUserId}}
+  const lambdaCallback = (err, data) => {
+    try {
+      expect(data.statusCode).toBe(200);
+      let responseBody = JSON.parse(data.body);
+      expect(responseBody.data.length).toBe(1);
+      expect(responseBody.count).toBe(1);
+      expect(responseBody.limit).toBe(1);
+      expect(responseBody.pagination.previousCursor).toBeNull();
+      let nextCursor = Buffer.from(responseBody.pagination.nextCursor, 'base64').toString('ascii')
+      expect(nextCursor).toBe(JSON.stringify(lastEvaluatedKey));
+      done();
+    } catch (error) {
+      done(error);
+    };
+  };
+  lists.getAll(exampleEvent, {}, lambdaCallback)
+});
+
 test('Test list not found', done => {
     AWS.DynamoDB.DocumentClient.prototype.get.mockImplementationOnce((_, callback) => callback(null, {}));
     const exampleEvent = {'pathParameters' : {'listId' : mockId}}

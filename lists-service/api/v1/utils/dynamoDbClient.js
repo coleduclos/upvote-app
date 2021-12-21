@@ -78,10 +78,9 @@ class DynamoDbClient {
         this.dynamoDb.get(params, onGet)
     };
 
-    listItems(limit, exclusiveStartKey, callback){
-        var params = {
-            TableName: this.tableName
-        };
+    listItems(limit, exclusiveStartKey, callback, params={}){
+
+        params.TableName = this.tableName;
 
         if (limit) {
             params.Limit = limit;

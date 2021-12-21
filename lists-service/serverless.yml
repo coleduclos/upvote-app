@@ -120,6 +120,24 @@ functions:
           path: v1/votes/{voteId}
           method: delete
           authorizer: ${self:custom.authorizor}
+  votesGetOne:
+    handler: api/v1/votes.getOne
+    memorySize: 128
+    description: Get vote details by id.
+    events:
+      - http:
+          path: v1/votes/{voteId}
+          method: get
+          authorizer: ${self:custom.authorizor}
+  votesGetAll:
+    handler: api/v1/votes.getAll
+    memorySize: 128
+    description: Get all votes.
+    events:
+      - http:
+          path: v1/votes
+          method: get
+          authorizer: ${self:custom.authorizor}
 resources:
   Resources:
     CognitoUserPool:

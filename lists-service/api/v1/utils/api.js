@@ -86,11 +86,33 @@ function generateListResponseBody(data, limit, previousCursor){
     return JSON.stringify(responseBody)
 }
 
+function generateFilterExpression(queryStringParameters,
+    expressionAttributeNames={},
+    expressionAttributeValues={}){
+
+    let filterExpression = "";
+    for (const property in queryStringParameters) {
+        filterExpression += ` #${property} = :${property} ,`;
+        expressionAttributeNames["#" + property] = property;
+        expressionAttributeValues[":" + property] = queryStringParameters[property];
+    }
+
+    filterExpression = filterExpression.slice(0, -1);
+
+    const params = {
+        FilterExpression : filterExpression,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues
+    }
+    return params
+}
+
 module.exports = {
     ApiResponse, 
     ApiErrorNotFound,
     createOneCallback,
     deleteOneCallback,
     getAllCallback,
-    getOneCallback
+    getOneCallback,
+    generateFilterExpression
 }

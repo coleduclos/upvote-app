@@ -31,12 +31,12 @@ class ListsDbClient {
     const key = { 'listId' : listId };
     this.dbClient.getItem(key, callback)
   }
-  getAll(limit, nextCursor, callback){
+  getAll(limit, nextCursor, callback, params={}){
     let exclusiveStartKey = null;
     if (nextCursor) {
       exclusiveStartKey = JSON.parse(Buffer.from(nextCursor, 'base64').toString('ascii'));
     }
-    this.dbClient.listItems(limit, exclusiveStartKey, callback);
+    this.dbClient.listItems(limit, exclusiveStartKey, callback, params=params);
   }
 }
 
@@ -59,18 +59,27 @@ class ListsApiHandler {
   getAll(event, callback){
     let limit = this.apiResultsDefaultLimit;
     let nextCursor = null;
+    let params = {};
     if (event.queryStringParameters){
+      let queryStringParameters = event.queryStringParameters;
       if ('limit' in event.queryStringParameters)
       {
         limit = event.queryStringParameters.limit;
+        delete queryStringParameters.limit;
       }
       if ('nextCursor' in event.queryStringParameters){
         nextCursor = event.queryStringParameters.nextCursor;
+        delete queryStringParameters.nextCursor;
+      }
+      // Create filter from remaining query string params
+      if( Object.keys(queryStringParameters).length !== 0){
+        params = api.generateFilterExpression(queryStringParameters);
       }
     }
+
     this.dbClient.getAll(limit, nextCursor, function(err, data){
       api.getAllCallback(err, data, limit, nextCursor, callback)
-    })
+    }, params=params)
   }
   getOne(event, callback){
     const listId = event.pathParameters.listId;
