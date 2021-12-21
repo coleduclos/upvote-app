@@ -75,7 +75,7 @@ functions:
           path: v1/lists/{listId}/items
           method: post
           authorizer: ${self:custom.authorizor}
-  listItemsGetAll:
+  listItemsGetAllByListId:
     handler: api/v1/listItems.getAllByListId
     memorySize: 128
     description: Get all list items.
@@ -119,15 +119,6 @@ functions:
       - http:
           path: v1/votes/{voteId}
           method: delete
-          authorizer: ${self:custom.authorizor}
-  votesGetOne:
-    handler: api/v1/votes.getOne
-    memorySize: 128
-    description: Get vote details by id.
-    events:
-      - http:
-          path: v1/votes/{voteId}
-          method: get
           authorizer: ${self:custom.authorizor}
   votesGetAll:
     handler: api/v1/votes.getAll

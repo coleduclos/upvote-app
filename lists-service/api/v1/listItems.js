@@ -38,20 +38,21 @@ class ListItemsDbClient {
     };
     this.dbClient.getItem(key, callback);
   }
-  getAllByListId(listId, limit, nextCursor, callback){
+  getAllByListId(listId, limit, nextCursor, callback, params={}){
     let exclusiveStartKey = null;
     if (nextCursor) {
       exclusiveStartKey = JSON.parse(Buffer.from(nextCursor, 'base64').toString('ascii'));
     }
-    const keyConditionExpression = "#fk = :fv";
-    const expressionAttributeNames = {
-        "#fk": "listId"
-    };
-    const expressionAttributeValues = {
-        ":fv": listId
+    params.KeyConditionExpression = "#keyName = :keyValue";
+    if (!('ExpressionAttributeNames' in params)) {
+      params.ExpressionAttributeNames = {}
     }
-    this.dbClient.queryItems(keyConditionExpression, expressionAttributeNames, 
-      expressionAttributeValues, limit, exclusiveStartKey, callback);
+    if (!('ExpressionAttributeValues' in params)) {
+      params.ExpressionAttributeValues = {}
+    }
+    params.ExpressionAttributeNames["#keyName"] = "listId"
+    params.ExpressionAttributeValues[":keyValue"] = listId
+    this.dbClient.queryItems(params, limit, exclusiveStartKey, callback);
   }
 }
 
@@ -76,18 +77,25 @@ class ListItemsApiHandler {
     const listId = event.pathParameters.listId;
     let limit = this.apiResultsDefaultLimit;
     let nextCursor = null;
+    let params = {};
     if (event.queryStringParameters){
       if ('limit' in event.queryStringParameters)
       {
         limit = event.queryStringParameters.limit;
+        delete event.queryStringParameters.limit;
       }
       if ('nextCursor' in event.queryStringParameters){
         nextCursor = event.queryStringParameters.nextCursor;
+        delete event.queryStringParameters.nextCursor;
+      }
+      // Create filter from remaining query string params
+      if( Object.keys(event.queryStringParameters).length !== 0){
+        params = api.generateFilterExpression(event.queryStringParameters);
       }
     }
     this.dbClient.getAllByListId(listId, limit, nextCursor, function(err, data){
       api.getAllCallback(err, data, limit, nextCursor, callback)
-    })
+    }, params=params)
   }
   getOne(event, callback){
     const listId = event.pathParameters.listId;

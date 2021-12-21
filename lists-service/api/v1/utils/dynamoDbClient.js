@@ -105,21 +105,14 @@ class DynamoDbClient {
         this.dynamoDb.scan(params, onScan);
     }
 
-    queryItems(keyConditionExpression, expressionAttributeNames, 
-        expressionAttributeValues, limit, exclusiveStartKey, callback){
-        var params = {
-            TableName: this.tableName,
-            KeyConditionExpression: keyConditionExpression,
-            ExpressionAttributeNames: expressionAttributeNames,
-            ExpressionAttributeValues: expressionAttributeValues
-        };
+    queryItems(params, limit, exclusiveStartKey, callback){
+        params.TableName = this.tableName;
         if (limit) {
             params.Limit = limit;
         }
         if (exclusiveStartKey) {
             params.ExclusiveStartKey = exclusiveStartKey;
         }
-
         console.debug("Querying DynamoDB table: ")
         console.debug(params);
         const onQuery = (err, data) => {

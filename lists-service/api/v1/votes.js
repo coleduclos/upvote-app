@@ -41,6 +41,22 @@ class VotesDbClient {
     }
     this.dbClient.listItems(limit, exclusiveStartKey, callback, params=params);
   }
+  getAllByUserId(userId, limit, nextCursor, callback, params={}){
+    let exclusiveStartKey = null;
+    if (nextCursor) {
+      exclusiveStartKey = JSON.parse(Buffer.from(nextCursor, 'base64').toString('ascii'));
+    }
+    params.KeyConditionExpression = "#keyName = :keyValue";
+    if (!('ExpressionAttributeNames' in params)) {
+      params.ExpressionAttributeNames = {}
+    }
+    if (!('ExpressionAttributeValues' in params)) {
+      params.ExpressionAttributeValues = {}
+    }
+    params.ExpressionAttributeNames["#keyName"] = "userId"
+    params.ExpressionAttributeValues[":keyValue"] = userId
+    this.dbClient.queryItems(params, limit, exclusiveStartKey, callback);
+  }
 }
 
 class VotesApiHandler {
@@ -62,24 +78,40 @@ class VotesApiHandler {
   getAll(event, callback){
     let limit = this.apiResultsDefaultLimit;
     let nextCursor = null;
+    let queryStringParamUserId = null;
     let params = {};
     if (event.queryStringParameters){
-      let queryStringParameters = event.queryStringParameters;
       if ('limit' in event.queryStringParameters)
       {
         limit = event.queryStringParameters.limit;
+        delete event.queryStringParameters.limit;
       }
       if ('nextCursor' in event.queryStringParameters){
         nextCursor = event.queryStringParameters.nextCursor;
+        delete event.queryStringParameters.nextCursor;
+      }
+      // Need to remove userId from filtered expression b/c its a key
+      if ('userId' in event.queryStringParameters){
+        queryStringParamUserId = event.queryStringParameters.userId;
+        delete event.queryStringParameters.userId;
       }
       // Create filter from remaining query string params
-      if( Object.keys(queryStringParameters).length !== 0){
-        params = api.generateFilterExpression(queryStringParameters);
+      if( Object.keys(event.queryStringParameters).length !== 0){
+        params = api.generateFilterExpression(event.queryStringParameters);
       }
     }
-    this.dbClient.getAll(limit, nextCursor, function(err, data){
-      api.getAllCallback(err, data, limit, nextCursor, callback)
-    }, params=params)
+    // If user id present in query params, optimize the query
+    if (queryStringParamUserId){
+      this.dbClient.getAllByUserId(queryStringParamUserId,
+        limit, nextCursor, function(err, data){
+        api.getAllCallback(err, data, limit, nextCursor, callback)
+      }, params=params)
+    }
+    else {
+      this.dbClient.getAll(limit, nextCursor, function(err, data){
+        api.getAllCallback(err, data, limit, nextCursor, callback)
+      }, params=params)
+    }
   }
   getOne(event, callback){
     const listId = event.pathParameters.listId;
