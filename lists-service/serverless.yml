@@ -159,6 +159,7 @@ resources:
           - http://localhost:3000
         ClientName: ${self:service}-${opt:stage, self:provider.stage}-user-pool-client
         GenerateSecret: False
+        PreventUserExistenceErrors: ENABLED
         UserPoolId:
           Ref: CognitoUserPool
     CognitoUserPoolDomain:

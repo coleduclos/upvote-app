@@ -13,6 +13,18 @@ class ApiErrorNotFound extends ApiResponse {
     }
 }
 
+class ApiErrorUnableToFindUser extends ApiResponse {
+    constructor() {
+        super(401, JSON.stringify({'error' : 'Could not find user'}));
+    }
+}
+
+class ApiErrorUnauthorized extends ApiResponse {
+    constructor() {
+        super(401, JSON.stringify({'error' : 'Unauthorized'}));
+    }
+}
+
 function createOneCallback(err, data, callback){
     let response = new ApiResponse(500, JSON.stringify({'error' : 'internal server error'}));
     if(err) {
@@ -110,6 +122,8 @@ function generateFilterExpression(queryStringParameters,
 module.exports = {
     ApiResponse, 
     ApiErrorNotFound,
+    ApiErrorUnableToFindUser,
+    ApiErrorUnauthorized,
     createOneCallback,
     deleteOneCallback,
     getAllCallback,

@@ -100,7 +100,11 @@ const apiHandler = new ListsApiHandler();
 // ------- CREATE ONE ---------
 module.exports.createOne = (event, context, callback) => {
   auth.getUserIdFromRequest(event, function(err, userId) {
-    apiHandler.createOne(event, userId, callback);
+    if (err) {
+      callback(null, new api.ApiErrorUnableToFindUser());
+    } else {
+      apiHandler.createOne(event, userId, callback);
+    }
   });
 };
 
