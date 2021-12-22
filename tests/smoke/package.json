@@ -1,0 +1,6 @@
+{
+    "dependencies": {
+        "amazon-cognito-identity-js": "^5.2",
+        "axios": "^0.24"
+    }
+}
