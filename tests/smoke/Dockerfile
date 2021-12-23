@@ -11,5 +11,6 @@ RUN npm install
 
 COPY upvoteApiClient.js ./
 COPY smokeTests.js ./
+COPY __tests__ ./
 
 ENTRYPOINT ["./entrypoint.sh"]

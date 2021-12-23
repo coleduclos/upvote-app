@@ -35,4 +35,4 @@ if [ -z "${TEST_PASSWORD}" ]; then
     exit 1
 fi
 
-node smokeTests.js
+npm test

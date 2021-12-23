@@ -55,37 +55,90 @@ class UpvoteApiClient{
           console.error(error.message);
           callback(error, null);
     }
-    createList(title, details, callback){
-        const url = this.apiEndpoint + '/lists'
-        this.authenticateUser((err, authData) => {
-            if (err) {
-                console.error('Could not create list!');
-                callback(err, null)
-            } else {
-                let requestConfig = {
-                    headers: {
-                        Authorization: 'Bearer ' + authData.getAccessToken().getJwtToken(),
+    createList(title, details){
+        return new Promise((resolve, reject) => {
+            const url = this.apiEndpoint + '/lists'
+            this.authenticateUser((err, authData) => {
+                if (err) {
+                    console.error('Could not create list!');
+                    reject(err);
+                } else {
+                    let requestConfig = {
+                        headers: {
+                            Authorization: 'Bearer ' + authData.getAccessToken().getJwtToken(),
+                        }
                     }
+                    const data = {
+                        "title" : title,
+                        "details": details
+                    }
+                    axios.post(url, data, requestConfig)
+                        .then(response => {
+                            console.debug('Successfully created list.')
+                            // console.debug(response)
+                            resolve(response.data)
+                        })
+                        .catch(err => {
+                            console.error('Could not create list!');
+                            reject(err);
+                        });
                 }
-                const data = {
-                    "title" : title,
-                    "details": details
-                }
-                axios.post(url, data, requestConfig)
-                    .then(response => {
-                        console.debug('Successfully created list.')
-                        // console.debug(response)
-                        callback(null, response.data)
-                    })
-                    .catch(error => {
-                        console.error('Could not create list!');
-                        this.handleError(error, callback);
-                    });
-            }
+            })
         })
     }
-    getList(){
-
+    deleteList(listId){
+        return new Promise((resolve, reject) => {
+            const url = this.apiEndpoint + '/lists/' + listId
+            this.authenticateUser((err, authData) => {
+                if (err) {
+                    console.error('Could not delete list!');
+                    reject(err);
+                } else {
+                    let requestConfig = {
+                        headers: {
+                            Authorization: 'Bearer ' + authData.getAccessToken().getJwtToken(),
+                        }
+                    }
+                    axios.delete(url, requestConfig)
+                        .then(response => {
+                            console.debug('Successfully deleted list.')
+                            // console.debug(response)
+                            resolve(response.data)
+                        })
+                        .catch(err => {
+                            console.error('Could not delete list!');
+                            reject(err);
+                        });
+                }
+            })
+        })
+    }
+    getList(listId){
+        return new Promise((resolve, reject) => {
+            const url = this.apiEndpoint + '/lists/' + listId
+            this.authenticateUser((err, authData) => {
+                if (err) {
+                    console.error('Could not retrieve list!');
+                    reject(err);
+                } else {
+                    let requestConfig = {
+                        headers: {
+                            Authorization: 'Bearer ' + authData.getAccessToken().getJwtToken(),
+                        }
+                    }
+                    axios.get(url, requestConfig)
+                        .then(response => {
+                            console.debug('Successfully retrieved list.')
+                            // console.debug(response)
+                            resolve(response.data)
+                        })
+                        .catch(err => {
+                            console.error('Could not retrieve list: ' + listId);
+                            reject(err);
+                        });
+                }
+            })
+        })
     }
     getAllLists(){
 
