@@ -31,7 +31,7 @@ custom:
       - aws.cognito.signin.user.admin
 functions:
   listsCreateOne:
-    handler: api/v1/lists.createOne
+    handler: v1/lists.createOne
     memorySize: 128
     description: Create a list.
     events:
@@ -40,7 +40,7 @@ functions:
           method: post
           authorizer: ${self:custom.authorizor}
   listsGetAll:
-    handler: api/v1/lists.getAll
+    handler: v1/lists.getAll
     memorySize: 128
     description: Get all lists.
     events:
@@ -49,7 +49,7 @@ functions:
           method: get
           authorizer: ${self:custom.authorizor}
   listsGetOne:
-    handler: api/v1/lists.getOne
+    handler: v1/lists.getOne
     memorySize: 128
     description: Get list details by id.
     events:
@@ -58,7 +58,7 @@ functions:
           method: get
           authorizer: ${self:custom.authorizor}
   listsDeleteOne:
-    handler: api/v1/lists.deleteOne
+    handler: v1/lists.deleteOne
     memorySize: 128
     description: Delete a list.
     events:
@@ -67,7 +67,7 @@ functions:
           method: delete
           authorizer: ${self:custom.authorizor}
   listItemsCreateOne:
-    handler: api/v1/listItems.createOne
+    handler: v1/listItems.createOne
     memorySize: 128
     description: Create a list item.
     events:
@@ -76,7 +76,7 @@ functions:
           method: post
           authorizer: ${self:custom.authorizor}
   listItemsGetAllByListId:
-    handler: api/v1/listItems.getAllByListId
+    handler: v1/listItems.getAllByListId
     memorySize: 128
     description: Get all list items.
     events:
@@ -85,7 +85,7 @@ functions:
           method: get
           authorizer: ${self:custom.authorizor}
   listItemsGetOne:
-    handler: api/v1/listItems.getOne
+    handler: v1/listItems.getOne
     memorySize: 128
     description: Get list item details by id.
     events:
@@ -94,7 +94,7 @@ functions:
           method: get
           authorizer: ${self:custom.authorizor}
   listItemsDeleteOne:
-    handler: api/v1/listItems.deleteOne
+    handler: v1/listItems.deleteOne
     memorySize: 128
     description: Delete a list item.
     events:
@@ -103,7 +103,7 @@ functions:
           method: delete
           authorizer: ${self:custom.authorizor}
   votesCreateOne:
-    handler: api/v1/votes.createOne
+    handler: v1/votes.createOne
     memorySize: 128
     description: Submit a vote.
     events:
@@ -112,7 +112,7 @@ functions:
           method: post
           authorizer: ${self:custom.authorizor}
   votesDeleteOne:
-    handler: api/v1/votes.deleteOne
+    handler: v1/votes.deleteOne
     memorySize: 128
     description: Remove a vote.
     events:
@@ -121,7 +121,7 @@ functions:
           method: delete
           authorizer: ${self:custom.authorizor}
   votesGetAll:
-    handler: api/v1/votes.getAll
+    handler: v1/votes.getAll
     memorySize: 128
     description: Get all votes.
     events:
@@ -237,3 +237,12 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.VOTES_TABLE}
+  Outputs:
+      CognitoUserPoolId:
+        Description: Id of the Cognito User Pool
+        Value:
+          Ref: CognitoUserPool
+      CognitoUserPoolClientId:
+        Description: Id of the Cognito User Pool Client
+        Value:
+          Ref: CognitoUserPoolClient

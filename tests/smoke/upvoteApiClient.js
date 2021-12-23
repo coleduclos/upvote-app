@@ -55,6 +55,8 @@ class UpvoteApiClient{
           console.error(error.message);
           callback(error, null);
     }
+
+    // --------- LISTS API ---------
     createList(title, details){
         return new Promise((resolve, reject) => {
             const url = this.apiEndpoint + '/lists'
@@ -91,7 +93,7 @@ class UpvoteApiClient{
             const url = this.apiEndpoint + '/lists/' + listId
             this.authenticateUser((err, authData) => {
                 if (err) {
-                    console.error('Could not delete list!');
+                    console.error('Could not delete list: ' + listId);
                     reject(err);
                 } else {
                     let requestConfig = {
@@ -106,7 +108,7 @@ class UpvoteApiClient{
                             resolve(response.data)
                         })
                         .catch(err => {
-                            console.error('Could not delete list!');
+                            console.error('Could not delete list: ' + listId);
                             reject(err);
                         });
                 }
@@ -118,7 +120,7 @@ class UpvoteApiClient{
             const url = this.apiEndpoint + '/lists/' + listId
             this.authenticateUser((err, authData) => {
                 if (err) {
-                    console.error('Could not retrieve list!');
+                    console.error('Could not retrieve list: ' + listId);
                     reject(err);
                 } else {
                     let requestConfig = {
@@ -144,6 +146,96 @@ class UpvoteApiClient{
 
     }
 
+    // --------- LIST ITEMS API ---------
+    createListItem(listId, title, details){
+        return new Promise((resolve, reject) => {
+            const url = this.apiEndpoint + '/lists/' + listId + '/items'
+            this.authenticateUser((err, authData) => {
+                if (err) {
+                    console.error('Could not create list item!');
+                    reject(err);
+                } else {
+                    let requestConfig = {
+                        headers: {
+                            Authorization: 'Bearer ' + authData.getAccessToken().getJwtToken(),
+                        }
+                    }
+                    const data = {
+                        "title" : title,
+                        "details": details
+                    }
+                    axios.post(url, data, requestConfig)
+                        .then(response => {
+                            console.debug('Successfully created list item.')
+                            // console.debug(response)
+                            resolve(response.data)
+                        })
+                        .catch(err => {
+                            console.error('Could not create list item!');
+                            reject(err);
+                        });
+                }
+            })
+        })
+    }
+    deleteListItem(listId, itemId){
+        return new Promise((resolve, reject) => {
+            const url = this.apiEndpoint + '/lists/' + listId + '/items/' + itemId;
+            this.authenticateUser((err, authData) => {
+                if (err) {
+                    console.error('Could not delete list item:');
+                    console.error({'listId' : listId, 'itemId' : itemId});
+                    reject(err);
+                } else {
+                    let requestConfig = {
+                        headers: {
+                            Authorization: 'Bearer ' + authData.getAccessToken().getJwtToken(),
+                        }
+                    }
+                    axios.delete(url, requestConfig)
+                        .then(response => {
+                            console.debug('Successfully deleted list item.')
+                            // console.debug(response)
+                            resolve(response.data)
+                        })
+                        .catch(err => {
+                            console.error('Could not delete list item:');
+                            console.error({'listId' : listId, 'itemId' : itemId});
+                            reject(err);
+                        });
+                }
+            })
+        })
+    }
+    getListItem(listId, itemId){
+        return new Promise((resolve, reject) => {
+            const url = this.apiEndpoint + '/lists/' + listId + '/items/' + itemId
+            this.authenticateUser((err, authData) => {
+                if (err) {
+                    console.error('Could not retrieve list item: ');
+                    console.error({'listId' : listId, 'itemId' : itemId});
+                    reject(err);
+                } else {
+                    let requestConfig = {
+                        headers: {
+                            Authorization: 'Bearer ' + authData.getAccessToken().getJwtToken(),
+                        }
+                    }
+                    axios.get(url, requestConfig)
+                        .then(response => {
+                            console.debug('Successfully retrieved list item.')
+                            // console.debug(response)
+                            resolve(response.data)
+                        })
+                        .catch(err => {
+                            console.error('Could not retrieve list item: ');
+                            console.error({'listId' : listId, 'itemId' : itemId});
+                            reject(err);
+                        });
+                }
+            })
+        })
+    }
 }
 
 module.exports = UpvoteApiClient

@@ -1,4 +1,4 @@
-const votes = require('../api/v1/votes');
+const votes = require('../v1/votes');
 
 jest.setTimeout(1000);
 let mockId = '0';
@@ -7,7 +7,7 @@ let mockScore = 1
 
 jest.mock("aws-sdk")
 
-jest.mock('../api/v1/utils/auth.js', () => {
+jest.mock('../v1/utils/auth.js', () => {
     return {
       getUserIdFromRequest: jest.fn().mockImplementationOnce((_, callback) => callback(null, mockUserId))
     };

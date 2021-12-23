@@ -1,4 +1,4 @@
-const listItems = require('../api/v1/listItems');
+const listItems = require('../v1/listItems');
 
 jest.setTimeout(1000);
 let mockId = '0';
@@ -7,7 +7,7 @@ let mockTitle = 'Test Title';
 
 jest.mock("aws-sdk")
 
-jest.mock('../api/v1/utils/auth.js', () => {
+jest.mock('../v1/utils/auth.js', () => {
   return {
     getUserIdFromRequest: jest.fn().mockImplementationOnce((_, callback) => callback(null, mockUserId))
   };
