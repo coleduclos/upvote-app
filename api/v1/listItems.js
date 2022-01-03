@@ -5,23 +5,24 @@ const auth = require('./utils/auth.js')
 
 const DynamoDbClient = require('./utils/dynamoDbClient.js')
 
-function ListItem(listId, title, details, createdBy){
+function ListItem(listId, title, details, createdBy, updatedBy){
   const timestamp = new Date().getTime();
-  this.itemId = uuid.v1()
-  this.listId = listId
-  this.title = title
-  this.details = details
-  this.createdBy = createdBy
-  this.createdAt = timestamp
-  this.updatedAt = timestamp
+  this.itemId = uuid.v1();
+  this.listId = listId;
+  this.title = title;
+  this.details = details;
+  this.createdAt = timestamp;
+  this.createdBy = createdBy;
+  this.updatedAt = timestamp;
+  this.updatedBy = updatedBy;
 };
 
 class ListItemsDbClient {
   constructor(){
     this.dbClient = new DynamoDbClient(process.env.LIST_ITEMS_TABLE)
   }
-  createOne(listId, title, details, createdBy, callback){
-    const item = new ListItem(listId, title, details, createdBy)
+  createOne(listId, title, details, userId, callback){
+    const item = new ListItem(listId, title, details, userId, userId)
     this.dbClient.createItem(item, callback);
   }
   deleteOne(listId, itemId, callback){

@@ -24,6 +24,11 @@ describe("Upvote API test suite", () => {
             testList = data;
             expect(data.title).toBe(testListTitle);
             expect(data.details).toBe(testListDetails);
+
+            expect(data.createdAt).toEqual(expect.anything());
+            expect(data.createdBy).toEqual(expect.anything());
+            expect(data.updatedAt).toEqual(expect.anything());
+            expect(data.updatedBy).toEqual(expect.anything());
         });
     });
 
@@ -32,16 +37,27 @@ describe("Upvote API test suite", () => {
             expect(data.listId).toBe(testList.listId);
             expect(data.title).toBe(testList.title);
             expect(data.details).toBe(testList.details);
+
+            expect(data.createdAt).toEqual(expect.anything());
+            expect(data.createdBy).toEqual(expect.anything());
+            expect(data.updatedAt).toEqual(expect.anything());
+            expect(data.updatedBy).toEqual(expect.anything());
         });
     });
 
     test("Test creating list item", () => {
         return upvoteApiCient.createListItem(testList.listId, testListItemTitle, testListItemDetails).then(data => {
             testListItem = data;
-            expect(data.itemId).not.toBeNull();
+
             expect(data.listId).toBe(testList.listId);
             expect(data.title).toBe(testListItemTitle);
             expect(data.details).toBe(testListItemDetails);
+
+            expect(data.itemId).toEqual(expect.anything());
+            expect(data.createdAt).toEqual(expect.anything());
+            expect(data.createdBy).toEqual(expect.anything());
+            expect(data.updatedAt).toEqual(expect.anything());
+            expect(data.updatedBy).toEqual(expect.anything());
         });
     });
 
@@ -51,6 +67,11 @@ describe("Upvote API test suite", () => {
             expect(data.listId).toBe(testListItem.listId);
             expect(data.title).toBe(testListItem.title);
             expect(data.details).toBe(testListItem.details);
+
+            expect(data.createdAt).toEqual(expect.anything());
+            expect(data.createdBy).toEqual(expect.anything());
+            expect(data.updatedAt).toEqual(expect.anything());
+            expect(data.updatedBy).toEqual(expect.anything());
         });
     });
 

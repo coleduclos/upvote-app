@@ -186,14 +186,27 @@ resources:
         AttributeDefinitions:
           -
             AttributeName: "listId"
-            AttributeType: "S"   
+            AttributeType: "S"
+          -
+            AttributeName: "createdBy"
+            AttributeType: "S"  
         KeySchema:
           -
             AttributeName: "listId"
             KeyType: "HASH"
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          -
+            IndexName: createdBy
+            KeySchema:
+              -
+                AttributeName: "createdBy"
+                KeyType: "HASH"
+              -
+                AttributeName: "listId"
+                KeyType: "RANGE"
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.LISTS_TABLE}
     ListItemsDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
@@ -205,6 +218,9 @@ resources:
           -
             AttributeName: "itemId"
             AttributeType: "S"
+          -
+            AttributeName: "createdBy"
+            AttributeType: "S"
         KeySchema:
           -
             AttributeName: "listId"
@@ -212,9 +228,19 @@ resources:
           -
             AttributeName: "itemId"
             KeyType: "RANGE"
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          -
+            IndexName: createdBy
+            KeySchema:
+              -
+                AttributeName: "createdBy"
+                KeyType: "HASH"
+              -
+                AttributeName: "itemId"
+                KeyType: "RANGE"
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.LIST_ITEMS_TABLE}
     VotesDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
@@ -233,9 +259,7 @@ resources:
           -
             AttributeName: "listId_itemId"
             KeyType: "RANGE"
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.VOTES_TABLE}
   Outputs:
       CognitoUserPoolId:
