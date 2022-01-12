@@ -6,7 +6,7 @@ async function postData(path, body) {
     const apiInit = {
         body: body,
         headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+            Authorization: `Bearer ${(await Auth.currentSession()).getAccessToken().getJwtToken()}`,
         },
     };
     console.log(body);

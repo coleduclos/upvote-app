@@ -6,4 +6,4 @@ package:
 	npm install
 	sls package
 test:
-	../node_modules/.bin/jest
+	../../node_modules/.bin/jest

@@ -8,14 +8,14 @@ import '@aws-amplify/ui-react/styles.css';
 Amplify.configure({
   Auth: {
       region: 'us-west-2',
-      userPoolId: 'us-west-2_7TemzS357',
-      userPoolWebClientId: '2hsnnfe28i2n864lo87l7i38iv',
+      userPoolId: 'us-west-2_DRtcga3yY',
+      userPoolWebClientId: '3misof2lheqo0j9hi1rd88deqa',
   },
   API: {
     endpoints: [
         {
             name: "UpvoteApi",
-            endpoint: "https://dhh2i3bir5.execute-api.us-west-2.amazonaws.com/dev"
+            endpoint: "https://5dnw5vstde.execute-api.us-west-2.amazonaws.com/dev/v1"
         }
     ]
   }

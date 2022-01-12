@@ -38,6 +38,7 @@ functions:
       - http:
           path: v1/lists
           method: post
+          cors: true
           authorizer: ${self:custom.authorizor}
   listsGetAll:
     handler: v1/lists.getAll
@@ -47,6 +48,7 @@ functions:
       - http:
           path: v1/lists 
           method: get
+          cors: true
           authorizer: ${self:custom.authorizor}
   listsGetOne:
     handler: v1/lists.getOne
@@ -56,6 +58,7 @@ functions:
       - http:
           path: v1/lists/{listId}
           method: get
+          cors: true
           authorizer: ${self:custom.authorizor}
   listsDeleteOne:
     handler: v1/lists.deleteOne
@@ -65,6 +68,7 @@ functions:
       - http:
           path: v1/lists/{listId}
           method: delete
+          cors: true
           authorizer: ${self:custom.authorizor}
   listItemsCreateOne:
     handler: v1/listItems.createOne
@@ -74,6 +78,7 @@ functions:
       - http:
           path: v1/lists/{listId}/items
           method: post
+          cors: true
           authorizer: ${self:custom.authorizor}
   listItemsGetAllByListId:
     handler: v1/listItems.getAllByListId
@@ -83,6 +88,7 @@ functions:
       - http:
           path: v1/lists/{listId}/items
           method: get
+          cors: true
           authorizer: ${self:custom.authorizor}
   listItemsGetOne:
     handler: v1/listItems.getOne
@@ -92,6 +98,7 @@ functions:
       - http:
           path: v1/lists/{listId}/items/{itemId}
           method: get
+          cors: true
           authorizer: ${self:custom.authorizor}
   listItemsDeleteOne:
     handler: v1/listItems.deleteOne
@@ -101,6 +108,7 @@ functions:
       - http:
           path: v1/lists/{listId}/items/{itemId}
           method: delete
+          cors: true
           authorizer: ${self:custom.authorizor}
   votesCreateOne:
     handler: v1/votes.createOne
@@ -110,6 +118,7 @@ functions:
       - http:
           path: v1/votes
           method: post
+          cors: true
           authorizer: ${self:custom.authorizor}
   votesDeleteOne:
     handler: v1/votes.deleteOne
@@ -119,6 +128,7 @@ functions:
       - http:
           path: v1/votes/{voteId}
           method: delete
+          cors: true
           authorizer: ${self:custom.authorizor}
   votesGetAll:
     handler: v1/votes.getAll
@@ -128,9 +138,19 @@ functions:
       - http:
           path: v1/votes
           method: get
+          cors: true
           authorizer: ${self:custom.authorizor}
 resources:
   Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
     CognitoUserPool:
       Type: "AWS::Cognito::UserPool"
       Properties:

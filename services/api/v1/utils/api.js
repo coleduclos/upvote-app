@@ -1,9 +1,15 @@
 'use strict';
 
 class ApiResponse {
-    constructor(statusCode, body) {
+    constructor(statusCode, body, cors=true) {
         this.statusCode = statusCode;
         this.body = body;
+        if(cors) {
+            this.headers = {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': true,
+            }
+        }
     }
 }
 
