@@ -156,6 +156,14 @@ resources:
       Properties:
         MfaConfiguration: OFF
         UserPoolName: ${self:service}-${opt:stage, self:provider.stage}-user-pool
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+            - Name: verified_phone_number
+              Priority: 2
+        AutoVerifiedAttributes:
+          - email
         UsernameAttributes:
           - email
         Policies:
